@@ -15,6 +15,6 @@ public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long scheduleId;
-    private String month;
+    private String monthValue;
     private String contents;
 }
