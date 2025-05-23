@@ -2,6 +2,7 @@ package deu.rest.api.Service;
 
 import deu.rest.api.Entity.College;
 import deu.rest.api.Entity.Department;
+import deu.rest.api.Repository.CollegeRepository;
 import deu.rest.api.Repository.DepartmentRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Getter
@@ -24,6 +26,7 @@ import java.util.List;
 @Slf4j
 public class DepartmentService {
     private final DepartmentRepository departmentRepository;
+    private final CollegeRepository collegeRepository;
     private final Department department = new Department();
 
     public List<String> fetchMajorHomepages() throws IOException { //하위 학과 링크 출력
@@ -42,43 +45,68 @@ public class DepartmentService {
         return homepageLinks;
     }
 
-    public void fetchAndSaveDepartment() throws IOException { //공통 메서드(학과 이름, 학과 전화번호) 호출
-        Document doc = Jsoup.connect("https://www.deu.ac.kr/www/deu-college.do").get();
+    public void fetchAndSaveDepartment() throws IOException { //메서드 분리
+        Document doc = fetchDepartmentPage();
+        Elements collegeTitles = extractCollegeTitles(doc);
 
-        Elements subjectElements = doc.select("div.subject");
-        Elements callElements = doc.select("div.call");
-
-        saveDepartmentNames(subjectElements);
-        saveDepartmentPhones(callElements);
-    }
-
-    private void saveDepartmentNames(Elements elements) {
-        for (Element element : elements) {
-            String name = element.text().trim();
-            log.info("단과대학 name: {}", name);
-
-            if (!departmentRepository.existsByDepartmentName(name)) {
-                Department department = new Department();
-                department.setDepartmentName(name);
-                departmentRepository.save(department);
-            }
+        for (Element collegeTitle : collegeTitles) {
+            processCollegeBlock(collegeTitle);
         }
     }
 
-    private void saveDepartmentPhones(Elements elements) {
-        for (Element element : elements) {
-            String phone = element.text().trim();
-            log.info("단과대학 phone: {}", phone);
+    private Document fetchDepartmentPage() throws IOException {//HTML 페이지 가져오기
+        return Jsoup.connect("https://www.deu.ac.kr/www/deu-college.do").get();
+    }
 
-            if (!departmentRepository.existsByDepartmentPhone(phone)) {
-                Department department = new Department();
-                department.setDepartmentPhone(phone);
-                departmentRepository.save(department);
-            }
+    private Elements extractCollegeTitles(Document doc) { //단과대학 제목 요소 리스트 추출
+        return doc.select("h4.h4-tit");
+    }
+
+    private void processCollegeBlock(Element collegeTitle) { //단과대학 하나에 대한 학과 처리
+        String collegeName = collegeTitle.text().trim();
+        Optional<College> collegeOpt = collegeRepository.findByName(collegeName);
+
+        if (collegeOpt.isEmpty()) {
+            log.warn("단과대학을 찾을 수 없음: {}", collegeName);
+            return;
+        }
+
+        College college = collegeOpt.get();
+        Element sibling = collegeTitle.nextElementSibling();
+
+        if (sibling == null || !sibling.hasClass("item-btn-wrap")) {
+            log.warn("학과 리스트를 찾을 수 없음: {}", collegeName);
+            return;
+        }
+
+        Elements items = sibling.select("div.item");
+        for (Element item : items) {
+            processDepartmentItem(item, college);
         }
     }
 
-    private void fetchAndSaveTuition(){ //학과별 등록금 저장 로직 구현 필요
-        
+    private void processDepartmentItem(Element item, College college) {//학과 한 행 저장 처리
+        Element subject = item.selectFirst("div.subject");
+        Element call = item.selectFirst("span.call");
+
+        if (subject == null || call == null) {
+            log.warn("누락된 데이터 - 단과대학: {}", college.getName());
+            return;
+        }
+
+        String subjectName = subject.text().trim();
+        String phone = call.text().trim();
+
+        if (!departmentRepository.existsByDepartmentName(subjectName)) {
+            Department department = new Department();
+            department.setDepartmentName(subjectName);
+            department.setDepartmentPhone(phone);
+            department.setCollegeId(college);
+            departmentRepository.save(department);
+
+            log.info("저장됨 - 학과: {}, 전화: {}, 단과대: {}", subjectName, phone, college.getName());
+        }
     }
+
+
 }
