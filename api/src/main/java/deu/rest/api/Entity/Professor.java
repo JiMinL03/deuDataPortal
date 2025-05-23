@@ -19,10 +19,6 @@ public class Professor {
     private String email;
 
     @ManyToOne
-    @JoinColumn(name = "college_id")
-    private College college;
-
-    @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
 }
