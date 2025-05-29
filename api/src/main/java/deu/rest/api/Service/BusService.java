@@ -17,25 +17,31 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class BusService {
     private final BusRepository busRepository;
-    public void fetchAndSaveColleges() throws IOException { //단과대학 정보를 가져오고 저장하는 메서드
-        Document doc = Jsoup.connect("https://www.deu.ac.kr/www/deu-bus.do").get(); // Jsoup 라이브러리를 사용해 웹 페이지를 크롤링
-        /*
-        * Jsoup.connect(...) 주어진 URL에 HTTP 연결을 시도
-        * .get() → 해당 웹페이지의 HTML 문서 전체를 가져와서 파싱한 후, Document 객체로 반환
-        * Document doc → 웹페이지의 HTML DOM 전체 구조를 담고 있는 객체
-        * */
-        Elements rows = doc.select("table tbody tr");
+    public void fetchAndSaveBus() throws IOException {
+        Document doc = Jsoup.connect("https://www.deu.ac.kr/www/deu-bus.do").get();
 
-        for (Element row : rows) {
-            Elements cols = row.select("td");
+        // 셔틀버스 정보 각각의 item 블록을 선택
+        Elements busItems = doc.select("div.sub-bus > div.item");
 
-            if (cols.size() < 5) continue;  // 컬럼 개수 부족 시 건너뜀
+        for (Element item : busItems) {
+            // 버스 이름
+            String busName = item.selectFirst("div.subject > span").text().trim();
 
-            String busName = cols.get(0).text().trim();
-            String route = cols.get(1).text().trim();
-            String firstBus = cols.get(2).text().trim();
-            String lastBus = cols.get(3).text().trim();
-            String dispatchTime = cols.get(4).text().trim();
+            // 노선 링크와 텍스트
+            Element routeElement = item.selectFirst("div.info dl:has(dt:contains(노선)) dd a.txt-under");
+            String route = routeElement != null ? routeElement.text().trim() : "";
+
+            // 첫차
+            Element firstBusElement = item.selectFirst("div.info dl:has(dt:contains(첫차)) dd");
+            String firstBus = firstBusElement != null ? firstBusElement.text().trim() : "";
+
+            // 막차
+            Element lastBusElement = item.selectFirst("div.info dl:has(dt:contains(막차)) dd");
+            String lastBus = lastBusElement != null ? lastBusElement.text().trim() : "";
+
+            // 배차간격
+            Element dispatchElement = item.selectFirst("div.info dl:has(dt:contains(배차간격)) dd");
+            String dispatchTime = dispatchElement != null ? dispatchElement.html().replaceAll("<br>", "\n").replaceAll("<.*?>", "").trim() : "";
 
             log.info("버스번호: {}, 노선: {}, 첫차: {}, 막차: {}, 배차시간: {}", busName, route, firstBus, lastBus, dispatchTime);
 
