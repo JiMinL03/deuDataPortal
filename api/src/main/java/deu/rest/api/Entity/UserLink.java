@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 //사용자별 서비스 엔티티
-public class Service {
+public class UserLink {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long serviceId;

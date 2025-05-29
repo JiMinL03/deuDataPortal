@@ -11,7 +11,7 @@ import lombok.Setter;
 //셔틀버스 엔티티
 public class Bus {
     @Id
-    private int busName; //버스번호
+    private String busName; //버스번호
 
     private String route; //노선
     private String firstBus; //첫차
