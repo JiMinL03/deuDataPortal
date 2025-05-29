@@ -18,6 +18,6 @@ public class Notice {
     private String link;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "infoSquare_Id", referencedColumnName = "infoSquareId")
+    @JoinColumn(name = "info_square_Id", referencedColumnName = "id")
     private InfoSquare infoSquareId;
 }
