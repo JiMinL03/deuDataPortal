@@ -15,6 +15,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -24,14 +25,33 @@ public class InfoSquareService {
     private final InfoSquareRepository infoSquareRepository;
     private final EntityManager entityManager;
 
-    public void fetchAndSaveInfoSquares() throws IOException {
-        int maxPages=5;
+    public void fetchAndSaveAllCategories() {
+        Map<String, String> categoryMap = Map.of(
+                "공지사항", "www/deu-notice.do",
+                "장학", "www/deu-scholarship.do",
+                "교육모집", "www/deu-education.do",
+                "기숙사", "www/deu-dormitory.do"
+        );
 
-        for(int page=1; page<=maxPages; page++){
-            String url = "https://www.deu.ac.kr/www/deu-notice.do?page=" + page;
-            Document doc = Jsoup.connect(url)
-                                .timeout(10000)
-                                .get();
+        for (Map.Entry<String, String> entry : categoryMap.entrySet()) {
+            String categoryName = entry.getKey();
+            String categoryUrl = entry.getValue();
+
+            try {
+                fetchAndSaveInfoSquaresByCategory(categoryName, categoryUrl);
+            } catch (IOException e) {
+                log.warn("⚠️ [{}] 카테고리 수집 실패: {}", categoryName, e.getMessage());
+            }
+        }
+    }
+
+    public void fetchAndSaveInfoSquaresByCategory(String categoryName, String categoryUrl) throws IOException {
+        int maxPages = 5;
+
+        for (int page = 1; page <= maxPages; page++) {
+            String url = "https://www.deu.ac.kr/" + categoryUrl + "?page=" + page;
+
+            Document doc = Jsoup.connect(url).timeout(10000).get();
             Elements rows = doc.select("tbody > tr");
 
             if (rows.isEmpty()) break;
@@ -45,12 +65,9 @@ public class InfoSquareService {
                 String date = row.select("td:nth-child(5)").text().trim();
                 String link = row.select("td.subject a").attr("href").trim();
 
-                if (number.isEmpty() || title.isEmpty() || writer.isEmpty()) {
-                    continue;
-                }
+                if (number.isEmpty() || title.isEmpty() || writer.isEmpty()) continue;
 
                 hasValidRow = true;
-
                 String fullLink = "https://www.deu.ac.kr" + link;
 
                 InfoSquare info = new InfoSquare();
@@ -59,9 +76,10 @@ public class InfoSquareService {
                 info.setWriter(writer);
                 info.setDate(date);
                 info.setContent(fullLink);
+                info.setCategory(categoryName);  // 카테고리 저장
 
-                log.info("저장: 번호={}, 제목={}, 작성자={}, 날짜={}, 링크={}",
-                        number, title, writer, date, fullLink);
+                log.info("저장: 카테고리={}, 번호={}, 제목={}, 작성자={}, 날짜={}, 링크={}",
+                        categoryName, number, title, writer, date, fullLink);
 
                 infoSquareRepository.save(info);
             }
@@ -69,12 +87,13 @@ public class InfoSquareService {
             if (!hasValidRow) break;
 
             try {
-                Thread.sleep(1000); // 서버 보호를 위해 1초 대기
+                Thread.sleep(1000); // 서버 부담 방지
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
     }
+
     @Transactional
     @EventListener(ApplicationReadyEvent.class)
     public void resetTable() {

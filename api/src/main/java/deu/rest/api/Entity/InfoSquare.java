@@ -21,4 +21,5 @@ public class InfoSquare {
     private String writer;
     private String content;
     private String date;
+    private String category;
 }
