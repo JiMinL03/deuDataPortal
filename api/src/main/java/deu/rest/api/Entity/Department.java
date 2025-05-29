@@ -19,5 +19,4 @@ public class Department {
 
     private String departmentName;
     private String departmentPhone;
-    private Integer tuition;
 }
