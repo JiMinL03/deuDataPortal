@@ -19,9 +19,13 @@ public class UserLinkService {
     private final UserLinkRepository userLinkRepository;
 
     public void fetchAndSaveUserLink() throws IOException {
+        log.info(">>> [UserLinkController] fetchColleges() 호출됨");
+
         Document doc = Jsoup.connect("https://www.deu.ac.kr/www/index.do").get();
 
-        Elements serviceLinks = doc.select("div#customServiceConsent a"); // 실제 구조 확인 후 수정 필요
+
+        Elements serviceLinks = doc.select("div.info a.info-item");
+        log.info(">>> 가져온 링크 수: {}", serviceLinks.size());
 
         for (Element link : serviceLinks) {
             String serviceName = link.text().trim();

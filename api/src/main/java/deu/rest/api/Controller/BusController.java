@@ -20,7 +20,7 @@ public class BusController {
     @GetMapping("/bus/fetch")  // HTTP POST 요청을 "/fetch" 경로로 받을 때 실행됨
     public ResponseEntity<String> fetchColleges() {
         try {
-            busService.fetchAndSaveColleges();  // 크롤링 + DB 저장 수행
+            busService.fetchAndSaveBus();  // 크롤링 + DB 저장 수행
             return ResponseEntity.ok("버스노선 데이터를 성공적으로 저장했습니다.");  // 200 OK 응답
         } catch (IOException e) {
             return ResponseEntity
