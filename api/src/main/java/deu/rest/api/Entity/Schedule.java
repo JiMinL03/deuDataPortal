@@ -10,7 +10,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-//학과일정
+//학사일정
 public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
