@@ -10,11 +10,16 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-//정보광장엔티티
 public class InfoSquare {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long infoSquareId;
+    private Long id;
 
+    private String number;
+    private String title;
     private String writer;
+    private String content;
+    private String date;
+    private String category;
 }
