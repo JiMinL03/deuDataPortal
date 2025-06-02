@@ -41,7 +41,13 @@ public class BusService {
 
             // 배차간격
             Element dispatchElement = item.selectFirst("div.info dl:has(dt:contains(배차간격)) dd");
-            String dispatchTime = dispatchElement != null ? dispatchElement.html().replaceAll("<br>", "\n").replaceAll("<.*?>", "").trim() : "";
+            String dispatchTime = dispatchElement != null
+                    ? dispatchElement.html()
+                    .replaceAll("<br>", " ")        // <br> → 공백으로 바꾸기
+                    .replaceAll("<.*?>", "")        // 나머지 태그 제거
+                    .replaceAll("\\s+", " ")        // 연속 공백/줄바꿈도 한 칸 공백으로 치환
+                    .trim()
+                    : "";
 
             log.info("버스번호: {}, 노선: {}, 첫차: {}, 막차: {}, 배차시간: {}", busName, route, firstBus, lastBus, dispatchTime);
 

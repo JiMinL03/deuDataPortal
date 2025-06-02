@@ -22,9 +22,11 @@ public class CampusMap {
     private String two_layer;
     private String three_layer;
     private String four_layer;
+    @Column(length=1000)
     private String five_layer;
     private String six_layer;
     private String seven_layer;
     private String eight_layer;
     private String nine_layer;
+
 }
