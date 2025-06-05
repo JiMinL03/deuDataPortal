@@ -27,6 +27,7 @@ public class ProfessorService {
     private final Professor professor = new Professor();
 
     public void crawlAllProfessors() throws IOException {
+
         Map<String, String> profLinksMap = fetchProfessorLinks();
 
         for (Map.Entry<String, String> entry : profLinksMap.entrySet()) {
@@ -147,4 +148,5 @@ public class ProfessorService {
             professorRepository.save(professor);
         }
     }
+    //https://csw.deu.ac.kr/se/sub02.do
 }
