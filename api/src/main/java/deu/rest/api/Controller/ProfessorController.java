@@ -17,7 +17,9 @@ public class ProfessorController {
     public ResponseEntity<String> fetchColleges() {
         try {
             professorService.crawlAllProfessors();  // 크롤링 + DB 저장 수행
+            professorService.fetchAndSaveProfessors("https://csw.deu.ac.kr/se/sub02.do","컴퓨터소프트웨어공학과");
             return ResponseEntity.ok("교수정보 데이터를 성공적으로 저장했습니다.");  // 200 OK 응답
+
         } catch (IOException e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)  // 500 에러 응답
